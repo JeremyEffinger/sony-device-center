@@ -18,9 +18,7 @@ method runs on the owning executor, using an injectable steady clock. Discovery
 prefers system-connected devices, then stable address ordering. An explicit address
 restricts attempts to that device. Failures retry after 1, 2, 4, 8, 16, then 30
 seconds. Success resets the delay. Manual disconnect suspends retries; connect
-resumes them. That 1s floor is too aggressive for pairing: on a WH-1000XM4,
-powering off and holding the power button to enter connecting/pairing mode
-loses to auto-reconnect unless `sonyd` is stopped first. EOF/fatal session errors mark the session disconnected; an ordinary
+resumes them. EOF/fatal session errors mark the session disconnected; an ordinary
 receive timeout does not. The owner joins the reader before reconnecting.
 
 Known connected sessions rotate settings reads in separate maintenance steps,

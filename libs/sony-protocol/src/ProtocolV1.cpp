@@ -23,9 +23,11 @@ constexpr uint8_t kNcAsmInquired = 0x02;  // NOISE_CANCELLING_AND_AMBIENT_SOUND_
 constexpr uint8_t kEqInquired = 0x01;     // PRESET_EQ
 constexpr uint8_t kSpeakToChatInquired = 0x05;  // SMART_TALKING_MODE (not V2's 0x0c)
 constexpr uint8_t kSpeakToChatParamOnOff = 0x01;
+constexpr uint8_t kSpeakToChatParamConfig = 0x00;  // FC: sensitivity / focus / timeout
 constexpr uint8_t kSpeakToChatSessionActive = 0x02;  // payload[2] while ducked
 constexpr uint8_t kSpeakToChatConfigSet = 0xfc;
 constexpr uint8_t kSpeakToChatSensitivityAuto = 0x00;
+constexpr uint8_t kSpeakToChatVoiceFocusOff = 0x00;
 constexpr uint8_t kSpeakToChatTimeoutStandard = 0x01;  // ~30s; 0x03 is "do not close"
 
 constexpr uint8_t kEffectOff = 0x00;
@@ -248,9 +250,9 @@ void ProtocolV1::setAutoPowerOff(int /*index*/) {
 
 bool ProtocolV1::getSpeakToChat() {
     // GET f6 05 -> RET f7 05 <kind> <onOff>
-    // kind 0x01 is the enable flag at [3] (not inverted). kind 0x02 is an
-    // active talking session — the cans are ducked. That is still "on".
-    // Treating 0x02 as off is how the UI lies after a reconnect.
+    // kind 0x02 is an active talking session (cans ducked). That is still
+    // "on"; treating it as off is how the UI lies after a reconnect.
+    // Otherwise the enable flag is at [3] and is not inverted.
     auto resp = _session.sendAndAwaitResponse(
         SonyFrame{ .type = DataType::DataMdr, .payload = {0xf6, kSpeakToChatInquired} },
         0xf7,
@@ -259,9 +261,7 @@ bool ProtocolV1::getSpeakToChat() {
     );
     if (resp.payload.size() < 4 || resp.payload[1] != kSpeakToChatInquired)
         throw SonyException(SonyErrorCode::InvalidResponse, "Incomplete SpeakToChat response");
-    if (resp.payload[2] == kSpeakToChatSessionActive)
-        return true;
-    return resp.payload[3] != 0;
+    return resp.payload[2] == kSpeakToChatSessionActive || resp.payload[3] != 0;
 }
 
 void ProtocolV1::setSpeakToChat(bool enabled) {
@@ -275,9 +275,9 @@ void ProtocolV1::setSpeakToChat(bool enabled) {
             .payload = {
                 kSpeakToChatConfigSet,
                 kSpeakToChatInquired,
-                0x00,
+                kSpeakToChatParamConfig,
                 kSpeakToChatSensitivityAuto,
-                0x00,
+                kSpeakToChatVoiceFocusOff,
                 kSpeakToChatTimeoutStandard
             }
         });

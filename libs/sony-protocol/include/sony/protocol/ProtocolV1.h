@@ -9,9 +9,7 @@ namespace sony::protocol {
 //
 // Critical: opcode 0x22 is POWER OFF on this generation (it is BATTERY GET on
 // V2). Nothing in this class may ever emit it; the battery lives behind
-// 0x10/0x11 instead. Speak-to-Chat is Smart Talking Mode (F6/F8 05) with a
-// non-inverted enable byte — not the V2 0x0c subtype. Enable also writes
-// config FC 05 (Auto / Standard ~30s); enable-only latches "do not close".
+// 0x10/0x11 instead.
 class ProtocolV1 : public IProtocol {
 public:
     explicit ProtocolV1(SonyProtocolSession& session);
